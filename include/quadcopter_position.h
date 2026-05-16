@@ -13,14 +13,14 @@ class QuadcopterPosition : public BaseDronePosition {
 
     unsigned long _last_run_timestamp_microseconds = 0;
 
-    unsigned long run_interval_microseconds;
+    unsigned long _run_interval_microseconds;
     static constexpr float sea_level_pressure_pa = 101325.0f;
 
     static float pressureToAltitudeMeters(float pressure_pa, float sea_level_pressure_pa);
 
 public:
     explicit QuadcopterPosition(const int run_interval_hz = 25) {
-        run_interval_microseconds = 1000 / run_interval_hz * 1000;
+        _run_interval_microseconds = 1000000UL / run_interval_hz;
     }
 
     void setup();

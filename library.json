@@ -1,0 +1,25 @@
+{
+  "name": "klevebrand-drone-position-bmp280-neom9n",
+  "version": "1.0.0",
+  "description": "An implementation for klevebrand-all-drone-core position with the BMP280 pressure sensor and u-blox neo m9n gnss sensor.",
+  "keywords": "klevebrand,gyro,bno085,bno08x,imu,neom9n,bmp280",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/LordMax2/klevebrand-drone-position-bmp280-neom9n.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Max Klevebrand",
+      "email": "max.klevebrand@gmail.com",
+      "url": "https://klevebrand.se"
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://klevebrand.se",
+  "dependencies": { 
+  },
+  "frameworks": "*",
+  "platforms": "Arduino"
+}
