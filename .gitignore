@@ -1,0 +1,7 @@
+.pio
+*.log
+.vscode
+cache
+lib/
+compile_commands.json
+.claude/
