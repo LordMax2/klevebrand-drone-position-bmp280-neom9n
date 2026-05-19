@@ -9,7 +9,7 @@ class KalmanEngine3x3
 
     float Q1 = 0.01f;
     float Q2 = 0.01f;
-    float Q3 = 0.01f;
+    float Q3 = 0.0001f;
 
 public:
     KalmanEngine3x3() = default;

@@ -34,10 +34,8 @@ void loop()
         quadcopter_position->run(false);
     }
 
-    Serial.print("Altitude: ");
-    Serial.print(quadcopter_position->getAltitude());
-    Serial.print("\t");
-    Serial.print("VelZ :");
-    Serial.print("\t");
-    Serial.println(quadcopter_position->getVelocityZ());
+    quadcopter_position->getAltitude();
+    quadcopter_position->getVelocityZ();
+
+    delay(2);
 }
