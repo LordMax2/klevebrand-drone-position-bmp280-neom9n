@@ -28,4 +28,3 @@ jobs:
       
       - name: Publish PlatformIO package
         run: pio pkg publish --no-interactive --owner lordmax2
-      
