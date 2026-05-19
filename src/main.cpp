@@ -1,10 +1,9 @@
 #include "quadcopter_position.h"
 #include "bno08x_drone_gyro.h"
 
-QuadcopterPosition* quadcopter_position;
+static QuadcopterPosition* quadcopter_position;
 static Bno08xDroneGyro gyro(10);
 static unsigned long gyro_last_run_milliseconds = 0;
-
 
 void setup()
 {
@@ -34,8 +33,16 @@ void loop()
         quadcopter_position->run(false);
     }
 
-    quadcopter_position->getAltitude();
-    quadcopter_position->getVelocityZ();
+    const float altitude = quadcopter_position->getAltitude();
+    const float raw_altitude = quadcopter_position->getRawAltitude();
+    const float velocity_z = quadcopter_position->getVelocityZ();
+
+    Serial.print(altitude);
+    Serial.print("\t");
+    Serial.print(raw_altitude);
+    Serial.print("\t");
+    Serial.print(velocity_z);
+    Serial.println();
 
     delay(2);
 }

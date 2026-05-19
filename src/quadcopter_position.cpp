@@ -31,6 +31,10 @@ float QuadcopterPosition::getAltitude()
     return _kalman_altitude.getPosition();
 }
 
+float QuadcopterPosition::getRawAltitude() const {
+    return _bmp280_last_altitude;
+}
+
 float QuadcopterPosition::getVelocityZ()
 {
     return _kalman_altitude.getVelocity();

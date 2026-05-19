@@ -40,6 +40,8 @@ public:
 
     float getAltitude() override;
 
+    float getRawAltitude() const;
+
     float getVelocityZ() override;
 
     void run(bool has_gyro_update);
