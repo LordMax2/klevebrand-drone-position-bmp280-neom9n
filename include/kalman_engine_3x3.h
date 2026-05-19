@@ -3,9 +3,9 @@
 
 class KalmanEngine3x3
 {
-    float _stateVector[3];
+    float _stateVector[3]{};
 
-    float _covarianceMatrix[3][3];
+    float _covarianceMatrix[3][3]{};
 
     float Q1 = 0.01f;
     float Q2 = 0.01f;
@@ -19,6 +19,16 @@ public:
     float updateZeroState(float measured_value, float R_sensor);
 
     void reset();
+
+    float getVelocity() const
+    {
+        return _stateVector[1];
+    }
+
+    float getPosition() const
+    {
+        return _stateVector[0];
+    }
 };
 
 #endif
