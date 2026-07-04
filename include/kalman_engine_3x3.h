@@ -1,5 +1,4 @@
-#ifndef KLEVEBRAND_DRONE_POSITION_BMP280_NEOM9N_KALMAN_ENGINE_H
-#define KLEVEBRAND_DRONE_POSITION_BMP280_NEOM9N_KALMAN_ENGINE_H
+#pragma once
 
 class KalmanEngine3x3
 {
@@ -30,5 +29,3 @@ public:
         return _stateVector[0];
     }
 };
-
-#endif

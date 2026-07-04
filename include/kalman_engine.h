@@ -1,5 +1,4 @@
-#ifndef KLEVEBRAND_DRONE_POSITION_BMP280_NEOM9N_KALMAN_ENGINE_H
-#define KLEVEBRAND_DRONE_POSITION_BMP280_NEOM9N_KALMAN_ENGINE_H
+#pragma once
 
 class KalmanEngine
 {
@@ -15,5 +14,3 @@ public:
     float getCertainValue();
     float getBias();
 };
-
-#endif //KLEVEBRAND_DRONE_POSITION_BMP280_NEOM9N_KALMAN_ENGINE_H

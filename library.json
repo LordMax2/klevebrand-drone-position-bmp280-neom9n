@@ -1,6 +1,6 @@
 {
   "name": "klevebrand-drone-position-bmp280-neom9n",
-  "version": "1.0.1",
+  "version": "3.0.0",
   "description": "An implementation for klevebrand-all-drone-core position with the BMP280 pressure sensor and u-blox neo m9n gnss sensor.",
   "keywords": "klevebrand,gyro,bno085,bno08x,imu,neom9n,bmp280",
   "repository":
