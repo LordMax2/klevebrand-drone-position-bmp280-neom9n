@@ -1,6 +1,6 @@
 #include <math.h>
 
-template <DroneGyroConcept SomeDroneGyroType>
+template <class SomeDroneGyroType>
 void QuadcopterPosition<SomeDroneGyroType>::setup()
 {
     if (!_bmp_device.begin())
@@ -21,30 +21,30 @@ void QuadcopterPosition<SomeDroneGyroType>::setup()
     _kalman_altitude.reset();
 }
 
-template <DroneGyroConcept SomeDroneGyroType>
+template <class SomeDroneGyroType>
 float QuadcopterPosition<SomeDroneGyroType>::pressureToAltitudeMeters(const float pressure_pa, const float sea_level_pressure_pa)
 {
     return 44330.0f * (1.0f - pow(pressure_pa / sea_level_pressure_pa, 0.1903f));
 }
 
-template <DroneGyroConcept SomeDroneGyroType>
+template <class SomeDroneGyroType>
 float QuadcopterPosition<SomeDroneGyroType>::getAltitude()
 {
     return _kalman_altitude.getPosition();
 }
 
-template <DroneGyroConcept SomeDroneGyroType>
+template <class SomeDroneGyroType>
 float QuadcopterPosition<SomeDroneGyroType>::getRawAltitude() const {
     return _bmp280_last_altitude;
 }
 
-template <DroneGyroConcept SomeDroneGyroType>
+template <class SomeDroneGyroType>
 float QuadcopterPosition<SomeDroneGyroType>::getVelocityZ()
 {
     return _kalman_altitude.getVelocity();
 }
 
-template <DroneGyroConcept SomeDroneGyroType>
+template <class SomeDroneGyroType>
 void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
 {
     const unsigned long now = micros();

@@ -5,8 +5,9 @@
 #include "concept_drone_position.h"
 #include "kalman_engine_3x3.h"
 
-template <DroneGyroConcept SomeDroneGyroType>
-class QuadcopterPosition {
+template <class SomeDroneGyroType>
+class QuadcopterPosition
+{
     Adafruit_BMP280 _bmp_device;
 
     float _temperature = 0.0f;
@@ -26,7 +27,8 @@ class QuadcopterPosition {
     static float pressureToAltitudeMeters(float pressure_pa, float sea_level_pressure_pa);
 
 public:
-    explicit QuadcopterPosition<SomeDroneGyroType>(SomeDroneGyroType* gyro, const int run_interval_hz = 25) {
+    explicit QuadcopterPosition(SomeDroneGyroType* gyro, const int run_interval_hz = 25)
+    {
         _run_interval_microseconds = 1000000UL / run_interval_hz;
         _gyro = gyro;
     }
@@ -43,17 +45,15 @@ public:
 
     float getVelocityZ();
 
-    float getVelocityX() const {return 0.0f};
+    float getVelocityX() const { return 0.0f; }
 
-    float getVelocityY() const {return 0.0f};
+    float getVelocityY() const { return 0.0f; }
 
-    float getLongitude() const {return 0.0f};
+    float getLongitude() const { return 0.0f; }
 
-    float getLatitude() const {return 0.0f};
+    float getLatitude() const { return 0.0f; }
 
     void run(bool has_gyro_update);
-
-    static_assert(DronePositionConcept<QuadcopterPosition<SomeDroneGyroType>>, "QuadcopterPosition must implement DronePositionConcept");
 };
 
 #include "quadcopter_position.ipp"
