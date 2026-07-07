@@ -1,9 +1,17 @@
 name: PlatformIO upload package
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
 
 jobs:
   build-and-publish:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -55,8 +63,15 @@ jobs:
           PIO_AVR_GCC_PATH: "symlink://${{ github.workspace }}/avr-gcc"
         run: pio run
 
+      - name: Remove build artifacts before publish
+        run: rm -rf .pio avr-gcc avr-gcc.tar.bz2 compile_commands.json
+
+      - name: Verify package contents
+        run: pio pkg pack
+
       - name: Login to PlatformIO
         run: pio account login -u ${{ secrets.PLATFORM_IO_USERNAME }} -p ${{ secrets.PLATFORM_IO_TOKEN }}
-      
+
       - name: Publish PlatformIO package
         run: pio pkg publish --no-interactive --owner lordmax2
+
