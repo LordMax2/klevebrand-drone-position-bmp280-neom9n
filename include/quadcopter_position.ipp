@@ -7,7 +7,7 @@ void QuadcopterPosition<SomeDroneGyroType>::setup()
     {
         Serial.println("FAILED TO SETUP BMP280..");
 
-        return;
+        //return;
     }
 
     _bmp_device.setSampling(
@@ -19,6 +19,66 @@ void QuadcopterPosition<SomeDroneGyroType>::setup()
     );
 
     _kalman_altitude.reset();
+
+    _gps_serial.begin(gps_baud_rate);
+    delay(100);
+
+    while (_gps_serial.available() > 0)
+    {
+        _gps_serial.read();
+    }
+
+    Serial.print(F("Connecting to NEO-M9N... "));
+
+    if (!_gps.begin(_gps_serial))
+    {
+        Serial.println(F("FAILED"));
+
+        return;
+    }
+
+    Serial.println(F("OK"));
+
+    _gps.setUART1Output(COM_TYPE_UBX);
+    _gps.setNavigationFrequency(gps_navigation_frequency_hz);
+    _gps.setAutoPVT(true);
+
+    _gps_ready = true;
+
+    Serial.print(F("Navigation frequency set to "));
+    Serial.print(gps_navigation_frequency_hz);
+    Serial.println(F(" Hz"));
+    Serial.println(F("Waiting for GPS lock..."));
+
+    while (true)
+    {
+        if (_gps.getPVT())
+        {
+            const uint8_t fix_type = _gps.getFixType();
+            const uint8_t satellite_count = _gps.getSIV();
+
+            _latitude = _gps.getLatitude() * gps_degrees_scale;
+            _longitude = _gps.getLongitude() * gps_degrees_scale;
+
+            Serial.print(F("fix="));
+            Serial.print(fix_type);
+            Serial.print(F(" sats="));
+            Serial.print(satellite_count);
+            Serial.print(F(" lat="));
+            Serial.print(_latitude, 7);
+            Serial.print(F(" lon="));
+            Serial.println(_longitude, 7);
+
+            if (fix_type >= 3)
+            {
+                Serial.println(F("GPS lock acquired"));
+
+                break;
+            }
+        }
+
+        delay(500);
+    }
 }
 
 template <class SomeDroneGyroType>
@@ -48,6 +108,12 @@ template <class SomeDroneGyroType>
 void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
 {
     const unsigned long now = micros();
+
+    if (_gps_ready && _gps.getPVT())
+    {
+        _latitude = _gps.getLatitude() * gps_degrees_scale;
+        _longitude = _gps.getLongitude() * gps_degrees_scale;
+    }
 
     if (has_gyro_update)
     {
