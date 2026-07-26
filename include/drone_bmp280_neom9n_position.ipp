@@ -1,15 +1,15 @@
 #include <math.h>
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::pressureToAltitudeMeters(const float pressure_pa,
-                                                                      const float sea_level_pressure_pa)
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::pressureToAltitudeMeters(const float pressure_pa,
+                                                                             const float sea_level_pressure_pa)
 {
     return 44330.0f * (1.0f - pow(pressure_pa / sea_level_pressure_pa, 0.1903f));
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-PositionLocalMeters QuadcopterPosition<SomeDroneGyroType>::latitudeLongitudeToLocalMeters(const float latitude,
-                                                                                          const float longitude) const
+PositionLocalMeters DroneBmp280Neom9nPosition<SomeDroneGyroType>::latitudeLongitudeToLocalMeters(const float latitude,
+                                                                                                 const float longitude) const
 {
     const float origin_latitude_radians = _origin_latitude * DEG_TO_RAD;
     const float meters_per_degree_longitude = METERS_PER_DEGREE_LATITUDE * cos(origin_latitude_radians);
@@ -21,13 +21,13 @@ PositionLocalMeters QuadcopterPosition<SomeDroneGyroType>::latitudeLongitudeToLo
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::localMetersToLatitude(const float north_meters) const
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::localMetersToLatitude(const float north_meters) const
 {
     return _origin_latitude + north_meters / METERS_PER_DEGREE_LATITUDE;
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::localMetersToLongitude(const float east_meters) const
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::localMetersToLongitude(const float east_meters) const
 {
     const float origin_latitude_radians = _origin_latitude * DEG_TO_RAD;
     const float meters_per_degree_longitude = METERS_PER_DEGREE_LATITUDE * cos(origin_latitude_radians);
@@ -36,7 +36,7 @@ float QuadcopterPosition<SomeDroneGyroType>::localMetersToLongitude(const float 
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-bool QuadcopterPosition<SomeDroneGyroType>::setupNeoM9n()
+bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupNeoM9n()
 {
     _gps_serial.begin(GPS_BAUD_RATE);
     delay(100);
@@ -105,7 +105,7 @@ bool QuadcopterPosition<SomeDroneGyroType>::setupNeoM9n()
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-bool QuadcopterPosition<SomeDroneGyroType>::setupBmp280()
+bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupBmp280()
 {
     if (!_bmp_device.begin())
     {
@@ -140,7 +140,7 @@ bool QuadcopterPosition<SomeDroneGyroType>::setupBmp280()
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-void QuadcopterPosition<SomeDroneGyroType>::setup()
+void DroneBmp280Neom9nPosition<SomeDroneGyroType>::setup()
 {
     if (!setupBmp280() || !setupNeoM9n())
     {
@@ -155,49 +155,49 @@ void QuadcopterPosition<SomeDroneGyroType>::setup()
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::getAltitude()
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::getAltitude()
 {
     return _kalman_altitude.getPosition();
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::getRawAltitude() const
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::getRawAltitude() const
 {
     return _bmp280_last_altitude;
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::getVelocityZ()
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::getVelocityZ()
 {
     return _kalman_altitude.getVelocity();
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::getVelocityX() const
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::getVelocityX() const
 {
     return _kalman_east.getVelocity();
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::getVelocityY() const
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::getVelocityY() const
 {
     return _kalman_north.getVelocity();
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::getLatitude() const
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::getLatitude() const
 {
     return localMetersToLatitude(_kalman_north.getPosition());
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-float QuadcopterPosition<SomeDroneGyroType>::getLongitude() const
+float DroneBmp280Neom9nPosition<SomeDroneGyroType>::getLongitude() const
 {
     return localMetersToLongitude(_kalman_east.getPosition());
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
-void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
+void DroneBmp280Neom9nPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
 {
     if (!isReady())
     {

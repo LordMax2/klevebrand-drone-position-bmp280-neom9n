@@ -18,7 +18,7 @@ static constexpr float GPS_VELOCITY_SCALE = 1e-3f;
 static constexpr float BMP_ALTITUDE_VARIANCE = 0.14f;
 
 template <DroneGyroConcept SomeDroneGyroType>
-class QuadcopterPosition
+class DroneBmp280Neom9nPosition
 {
     Adafruit_BMP280 _bmp_device;
     SFE_UBLOX_GNSS_SERIAL _gps;
@@ -58,7 +58,7 @@ class QuadcopterPosition
     bool setupBmp280();
 
 public:
-    QuadcopterPosition(SomeDroneGyroType* gyro, HardwareSerial& gps_serial, const int run_interval_hz = 25)
+    DroneBmp280Neom9nPosition(SomeDroneGyroType* gyro, HardwareSerial& gps_serial, const int run_interval_hz = 25)
         : _gps_serial(gps_serial)
     {
         _run_interval_microseconds = 1000000UL / run_interval_hz;
@@ -94,4 +94,4 @@ public:
     void run(bool has_gyro_update);
 };
 
-#include "quadcopter_position.ipp"
+#include "drone_bmp280_neom9n_position.ipp"

@@ -1,8 +1,8 @@
-#include "quadcopter_position.h"
+#include "drone_bmp280_neom9n_position.h"
 #include "bno08x_drone_gyro.h"
 
 static Bno08xDroneGyro gyro(10);
-static QuadcopterPosition quadcopter_position(&gyro, Serial2);
+static DroneBmp280Neom9nPosition drone_bmp280_neom9n_position(&gyro, Serial2);
 static unsigned long gyro_last_run_milliseconds = 0;
 
 void setup()
@@ -14,7 +14,7 @@ void setup()
     gyro.setup();
     gyro.setModeEulerAndAcceleration();
 
-    quadcopter_position.setup();
+    drone_bmp280_neom9n_position.setup();
 }
 
 void loop()
@@ -25,30 +25,30 @@ void loop()
 
         if (gyro.reload())
         {
-            quadcopter_position.run(true);
+            drone_bmp280_neom9n_position.run(true);
         }
         else
         {
-            quadcopter_position.run(false);
+            drone_bmp280_neom9n_position.run(false);
         }
     }
     else
     {
-        quadcopter_position.run(false);
+        drone_bmp280_neom9n_position.run(false);
     }
 
-    if (!quadcopter_position.isReady())
+    if (!drone_bmp280_neom9n_position.isReady())
     {
         return;
     }
 
-    const float altitude = quadcopter_position.getAltitude();
-    const float raw_altitude = quadcopter_position.getRawAltitude();
-    const float velocity_x = quadcopter_position.getVelocityX();
-    const float velocity_y = quadcopter_position.getVelocityY();
-    const float velocity_z = quadcopter_position.getVelocityZ();
-    const float latitude = quadcopter_position.getLatitude();
-    const float longitude = quadcopter_position.getLongitude();
+    const float altitude = drone_bmp280_neom9n_position.getAltitude();
+    const float raw_altitude = drone_bmp280_neom9n_position.getRawAltitude();
+    const float velocity_x = drone_bmp280_neom9n_position.getVelocityX();
+    const float velocity_y = drone_bmp280_neom9n_position.getVelocityY();
+    const float velocity_z = drone_bmp280_neom9n_position.getVelocityZ();
+    const float latitude = drone_bmp280_neom9n_position.getLatitude();
+    const float longitude = drone_bmp280_neom9n_position.getLongitude();
 
     Serial.print(altitude);
     Serial.print(F("\t"));
