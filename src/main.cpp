@@ -11,26 +11,41 @@ void setup()
 
     Serial.println(F("START"));
 
-    quadcopter_position.setup();
     gyro.setup();
+    gyro.setModeEulerAndAcceleration();
+
+    quadcopter_position.setup();
 }
 
 void loop()
 {
     if (millis() - gyro_last_run_milliseconds > 4)
     {
-        gyro.reload();
         gyro_last_run_milliseconds = millis();
 
-        quadcopter_position.run(true);
+        if (gyro.reload())
+        {
+            quadcopter_position.run(true);
+        }
+        else
+        {
+            quadcopter_position.run(false);
+        }
     }
     else
     {
         quadcopter_position.run(false);
     }
 
+    if (!quadcopter_position.isReady())
+    {
+        return;
+    }
+
     const float altitude = quadcopter_position.getAltitude();
     const float raw_altitude = quadcopter_position.getRawAltitude();
+    const float velocity_x = quadcopter_position.getVelocityX();
+    const float velocity_y = quadcopter_position.getVelocityY();
     const float velocity_z = quadcopter_position.getVelocityZ();
     const float latitude = quadcopter_position.getLatitude();
     const float longitude = quadcopter_position.getLongitude();
@@ -38,6 +53,10 @@ void loop()
     Serial.print(altitude);
     Serial.print(F("\t"));
     Serial.print(raw_altitude);
+    Serial.print(F("\t"));
+    Serial.print(velocity_x);
+    Serial.print(F("\t"));
+    Serial.print(velocity_y);
     Serial.print(F("\t"));
     Serial.print(velocity_z);
     Serial.print(F("\t"));

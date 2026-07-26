@@ -8,6 +8,34 @@ float QuadcopterPosition<SomeDroneGyroType>::pressureToAltitudeMeters(const floa
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
+PositionLocalMeters QuadcopterPosition<SomeDroneGyroType>::latitudeLongitudeToLocalMeters(const float latitude,
+                                                                                          const float longitude) const
+{
+    const float origin_latitude_radians = _origin_latitude * DEG_TO_RAD;
+    const float meters_per_degree_longitude = METERS_PER_DEGREE_LATITUDE * cos(origin_latitude_radians);
+
+    return PositionLocalMeters{
+        (longitude - _origin_longitude) * meters_per_degree_longitude,
+        (latitude - _origin_latitude) * METERS_PER_DEGREE_LATITUDE
+    };
+}
+
+template <DroneGyroConcept SomeDroneGyroType>
+float QuadcopterPosition<SomeDroneGyroType>::localMetersToLatitude(const float north_meters) const
+{
+    return _origin_latitude + north_meters / METERS_PER_DEGREE_LATITUDE;
+}
+
+template <DroneGyroConcept SomeDroneGyroType>
+float QuadcopterPosition<SomeDroneGyroType>::localMetersToLongitude(const float east_meters) const
+{
+    const float origin_latitude_radians = _origin_latitude * DEG_TO_RAD;
+    const float meters_per_degree_longitude = METERS_PER_DEGREE_LATITUDE * cos(origin_latitude_radians);
+
+    return _origin_longitude + east_meters / meters_per_degree_longitude;
+}
+
+template <DroneGyroConcept SomeDroneGyroType>
 bool QuadcopterPosition<SomeDroneGyroType>::setupNeoM9n()
 {
     _gps_serial.begin(GPS_BAUD_RATE);
@@ -38,7 +66,7 @@ bool QuadcopterPosition<SomeDroneGyroType>::setupNeoM9n()
     Serial.print(F("NAVIGATION FREQUENCY SET TO "));
     Serial.print(GPS_NAVIGATION_FREQUENCY_HZ);
     Serial.println(F(" HZ"));
-    Serial.println(F("wAITING FOR gps LOCK..."));
+    Serial.println(F("WAITING FOR GPS LOCK..."));
 
     while (true)
     {
@@ -61,7 +89,10 @@ bool QuadcopterPosition<SomeDroneGyroType>::setupNeoM9n()
 
             if (fix_type >= 3)
             {
-                Serial.println(F("GPS LOCK ACCQUIRED"));
+                _origin_latitude = _latitude;
+                _origin_longitude = _longitude;
+
+                Serial.println(F("GPS LOCK ACQUIRED"));
 
                 break;
             }
@@ -105,6 +136,10 @@ void QuadcopterPosition<SomeDroneGyroType>::setup()
     }
 
     _kalman_altitude.reset();
+    _kalman_east.reset();
+    _kalman_north.reset();
+
+    _ready = true;
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
@@ -126,6 +161,30 @@ float QuadcopterPosition<SomeDroneGyroType>::getVelocityZ()
 }
 
 template <DroneGyroConcept SomeDroneGyroType>
+float QuadcopterPosition<SomeDroneGyroType>::getVelocityX() const
+{
+    return _kalman_east.getVelocity();
+}
+
+template <DroneGyroConcept SomeDroneGyroType>
+float QuadcopterPosition<SomeDroneGyroType>::getVelocityY() const
+{
+    return _kalman_north.getVelocity();
+}
+
+template <DroneGyroConcept SomeDroneGyroType>
+float QuadcopterPosition<SomeDroneGyroType>::getLatitude() const
+{
+    return localMetersToLatitude(_kalman_north.getPosition());
+}
+
+template <DroneGyroConcept SomeDroneGyroType>
+float QuadcopterPosition<SomeDroneGyroType>::getLongitude() const
+{
+    return localMetersToLongitude(_kalman_east.getPosition());
+}
+
+template <DroneGyroConcept SomeDroneGyroType>
 void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
 {
     const unsigned long now = micros();
@@ -134,19 +193,38 @@ void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
     {
         _latitude = _gps.getLatitude() * GPS_DEGREES_SCALE;
         _longitude = _gps.getLongitude() * GPS_DEGREES_SCALE;
+
+        if (_gps.getFixType(0) >= 3)
+        {
+            const auto [east_meters, north_meters] = latitudeLongitudeToLocalMeters(_latitude, _longitude);
+            const float east_velocity_meters_per_second = _gps.getNedEastVel(0) * GPS_VELOCITY_SCALE;
+            const float north_velocity_meters_per_second = _gps.getNedNorthVel(0) * GPS_VELOCITY_SCALE;
+
+            _kalman_east.updateZeroState(east_meters, GPS_POSITION_VARIANCE);
+            _kalman_north.updateZeroState(north_meters, GPS_POSITION_VARIANCE);
+
+            _kalman_east.updateVelocityState(east_velocity_meters_per_second, GPS_VELOCITY_VARIANCE);
+            _kalman_north.updateVelocityState(north_velocity_meters_per_second, GPS_VELOCITY_VARIANCE);
+        }
     }
 
     if (has_gyro_update)
     {
+        const float imu_acceleration_x = _gyro->accelerationX();
+        const float imu_acceleration_y = _gyro->accelerationY();
         const float imu_acceleration_z = _gyro->accelerationZ();
 
-        if (_last_imu_update_seconds != 0.0f)
+        if (_last_imu_update_microseconds != 0)
         {
-            const float delta_time_seconds = now / 1000000.0f - _last_imu_update_seconds;
-            _kalman_altitude.predictKinematics(imu_acceleration_z, delta_time_seconds);
+            if (const float delta_time_seconds = (now - _last_imu_update_microseconds) * 1e-6f; delta_time_seconds > 0.0f && delta_time_seconds < 0.1f)
+            {
+                _kalman_east.predictKinematics(imu_acceleration_x, delta_time_seconds);
+                _kalman_north.predictKinematics(imu_acceleration_y, delta_time_seconds);
+                _kalman_altitude.predictKinematics(imu_acceleration_z, delta_time_seconds);
+            }
         }
 
-        _last_imu_update_seconds = now / 1000000.0f;
+        _last_imu_update_microseconds = now;
     }
 
     if (_last_run_timestamp_microseconds != 0 && now - _last_run_timestamp_microseconds < _run_interval_microseconds)
@@ -166,5 +244,5 @@ void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
 
     _bmp280_last_altitude = pressureToAltitudeMeters(_pressure, SEA_LEVEL_PRESSURE_PA);
 
-    _kalman_altitude.updateZeroState(_bmp280_last_altitude, 0.14);
+    _kalman_altitude.updateZeroState(_bmp280_last_altitude, BMP_ALTITUDE_VARIANCE);
 }
