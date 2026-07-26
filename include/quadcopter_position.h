@@ -31,6 +31,7 @@ class QuadcopterPosition
     float _longitude = 0.0f;
     float _origin_latitude = 0.0f;
     float _origin_longitude = 0.0f;
+    float _origin_pressure_pa = SEA_LEVEL_PRESSURE_PA;
 
     unsigned long _last_run_timestamp_microseconds = 0;
     unsigned long _last_imu_update_microseconds = 0;
@@ -38,6 +39,7 @@ class QuadcopterPosition
     unsigned long _run_interval_microseconds;
 
     bool _gps_ready = false;
+    bool _bmp280_ready = false;
     bool _ready = false;
 
     KalmanEngine3x3 _kalman_altitude{0.01f, 0.01f, 0.0001f};

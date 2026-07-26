@@ -122,6 +122,18 @@ bool QuadcopterPosition<SomeDroneGyroType>::setupBmp280()
         Adafruit_BMP280::STANDBY_MS_1
     );
 
+    const float origin_pressure_pa = _bmp_device.readPressure();
+
+    if (origin_pressure_pa <= 0.0f)
+    {
+        Serial.println(F("FAILED TO READ BMP280 ORIGIN PRESSURE."));
+
+        return false;
+    }
+
+    _origin_pressure_pa = origin_pressure_pa;
+    _bmp280_ready = true;
+
     Serial.println(F("SUCCESSFULLY SETUP BMP280"));
 
     return true;
@@ -187,9 +199,14 @@ float QuadcopterPosition<SomeDroneGyroType>::getLongitude() const
 template <DroneGyroConcept SomeDroneGyroType>
 void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
 {
+    if (!isReady())
+    {
+        return;
+    }
+
     const unsigned long now = micros();
 
-    if (_gps_ready && _gps.getPVT())
+    if (_gps.getPVT())
     {
         _latitude = _gps.getLatitude() * GPS_DEGREES_SCALE;
         _longitude = _gps.getLongitude() * GPS_DEGREES_SCALE;
@@ -199,12 +216,14 @@ void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
             const auto [east_meters, north_meters] = latitudeLongitudeToLocalMeters(_latitude, _longitude);
             const float east_velocity_meters_per_second = _gps.getNedEastVel(0) * GPS_VELOCITY_SCALE;
             const float north_velocity_meters_per_second = _gps.getNedNorthVel(0) * GPS_VELOCITY_SCALE;
+            const float up_velocity_meters_per_second = -_gps.getNedDownVel(0) * GPS_VELOCITY_SCALE;
 
             _kalman_east.updateZeroState(east_meters, GPS_POSITION_VARIANCE);
             _kalman_north.updateZeroState(north_meters, GPS_POSITION_VARIANCE);
 
             _kalman_east.updateVelocityState(east_velocity_meters_per_second, GPS_VELOCITY_VARIANCE);
             _kalman_north.updateVelocityState(north_velocity_meters_per_second, GPS_VELOCITY_VARIANCE);
+            _kalman_altitude.updateVelocityState(up_velocity_meters_per_second, GPS_VELOCITY_VARIANCE);
         }
     }
 
@@ -242,7 +261,7 @@ void QuadcopterPosition<SomeDroneGyroType>::run(const bool has_gyro_update)
         return;
     }
 
-    _bmp280_last_altitude = pressureToAltitudeMeters(_pressure, SEA_LEVEL_PRESSURE_PA);
+    _bmp280_last_altitude = pressureToAltitudeMeters(_pressure, _origin_pressure_pa);
 
     _kalman_altitude.updateZeroState(_bmp280_last_altitude, BMP_ALTITUDE_VARIANCE);
 }
