@@ -4,10 +4,14 @@
 #include <HardwareSerial.h>
 #include <SparkFun_u-blox_GNSS_v3.h>
 #include "concept_drone_gyro.h"
-#include "concept_drone_position.h"
 #include "kalman_engine_3x3.h"
 
-template <class SomeDroneGyroType>
+static constexpr float SEA_LEVEL_PRESSURE_PA = 101325.0f;
+static constexpr float GPS_DEGREES_SCALE = 1e-7f;
+static constexpr unsigned long GPS_BAUD_RATE = 38400UL;
+static constexpr uint8_t GPS_NAVIGATION_FREQUENCY_HZ = 10;
+
+template <DroneGyroConcept SomeDroneGyroType>
 class QuadcopterPosition
 {
     Adafruit_BMP280 _bmp_device;
@@ -24,10 +28,6 @@ class QuadcopterPosition
     float _last_imu_update_seconds = 0;
 
     unsigned long _run_interval_microseconds;
-    static constexpr float sea_level_pressure_pa = 101325.0f;
-    static constexpr float gps_degrees_scale = 1e-7f;
-    static constexpr unsigned long gps_baud_rate = 38400UL;
-    static constexpr uint8_t gps_navigation_frequency_hz = 10;
 
     bool _gps_ready = false;
 
@@ -36,6 +36,9 @@ class QuadcopterPosition
     SomeDroneGyroType* _gyro;
 
     static float pressureToAltitudeMeters(float pressure_pa, float sea_level_pressure_pa);
+
+    bool setupNeoM9n();
+    bool setupBmp280();
 
 public:
     QuadcopterPosition(SomeDroneGyroType* gyro, HardwareSerial& gps_serial, const int run_interval_hz = 25)

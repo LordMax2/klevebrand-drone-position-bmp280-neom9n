@@ -2,14 +2,14 @@
 #include "bno08x_drone_gyro.h"
 
 static Bno08xDroneGyro gyro(10);
-static QuadcopterPosition<Bno08xDroneGyro> quadcopter_position(&gyro, Serial2);
+static QuadcopterPosition quadcopter_position(&gyro, Serial2);
 static unsigned long gyro_last_run_milliseconds = 0;
 
 void setup()
 {
     Serial.begin(115200);
 
-    Serial.println("START");
+    Serial.println(F("START"));
 
     quadcopter_position.setup();
     gyro.setup();
@@ -36,13 +36,13 @@ void loop()
     const float longitude = quadcopter_position.getLongitude();
 
     Serial.print(altitude);
-    Serial.print("\t");
+    Serial.print(F("\t"));
     Serial.print(raw_altitude);
-    Serial.print("\t");
+    Serial.print(F("\t"));
     Serial.print(velocity_z);
-    Serial.print("\t");
+    Serial.print(F("\t"));
     Serial.print(latitude, 7);
-    Serial.print("\t");
+    Serial.print(F("\t"));
     Serial.print(longitude, 7);
     Serial.println();
 
