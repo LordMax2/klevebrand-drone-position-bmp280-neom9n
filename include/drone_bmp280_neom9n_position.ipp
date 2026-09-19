@@ -68,38 +68,48 @@ bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupNeoM9n()
     Serial.println(F(" HZ"));
     Serial.println(F("WAITING FOR GPS LOCK..."));
 
+    const unsigned long gps_wait_start_ms = millis();
+
     while (true)
     {
-        if (_gps.getPVT())
+        const bool got_pvt = _gps.getPVT(1000);
+
+        Serial.print(F("GPS WAIT t="));
+        Serial.print((millis() - gps_wait_start_ms) / 1000UL);
+        Serial.print(F("s PVT="));
+        Serial.print(got_pvt ? 1 : 0);
+
+        if (!got_pvt)
         {
-            const uint8_t fix_type = _gps.getFixType();
-            const uint8_t satellite_count = _gps.getSIV();
-
-            _latitude = _gps.getLatitude() * GPS_DEGREES_SCALE;
-            _longitude = _gps.getLongitude() * GPS_DEGREES_SCALE;
-
-            Serial.print(F("FIX="));
-            Serial.print(fix_type);
-            Serial.print(F(" SATS="));
-            Serial.print(satellite_count);
-            Serial.print(F(" LAT="));
-            Serial.print(_latitude, 7);
-            Serial.print(F(" LON="));
-            Serial.println(_longitude, 7);
-
-            if (fix_type >= 3)
-            {
-                _origin_latitude = _latitude;
-                _origin_longitude = _longitude;
-                _has_3d_fix = true;
-
-                Serial.println(F("GPS LOCK ACQUIRED"));
-
-                break;
-            }
+            Serial.println(F(" (no nav packet yet)"));
+            continue;
         }
 
-        delay(500);
+        const uint8_t fix_type = _gps.getFixType(0);
+        const uint8_t satellite_count = _gps.getSIV(0);
+
+        _latitude = _gps.getLatitude() * GPS_DEGREES_SCALE;
+        _longitude = _gps.getLongitude() * GPS_DEGREES_SCALE;
+
+        Serial.print(F(" FIX="));
+        Serial.print(fix_type);
+        Serial.print(F(" SATS="));
+        Serial.print(satellite_count);
+        Serial.print(F(" LAT="));
+        Serial.print(_latitude, 7);
+        Serial.print(F(" LON="));
+        Serial.println(_longitude, 7);
+
+        if (fix_type >= 3)
+        {
+            _origin_latitude = _latitude;
+            _origin_longitude = _longitude;
+            _has_3d_fix = true;
+
+            Serial.println(F("GPS LOCK ACQUIRED"));
+
+            break;
+        }
     }
 
     return true;
