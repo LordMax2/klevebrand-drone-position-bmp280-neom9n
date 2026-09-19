@@ -91,6 +91,7 @@ bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupNeoM9n()
             {
                 _origin_latitude = _latitude;
                 _origin_longitude = _longitude;
+                _has_3d_fix = true;
 
                 Serial.println(F("GPS LOCK ACQUIRED"));
 
@@ -111,7 +112,7 @@ bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupBmp280()
     {
         Serial.println(F("FAILED TO SETUP BMP280."));
 
-        return false;
+        //return false;
     }
 
     _bmp_device.setSampling(
@@ -211,7 +212,9 @@ void DroneBmp280Neom9nPosition<SomeDroneGyroType>::run(const bool has_gyro_updat
         _latitude = _gps.getLatitude() * GPS_DEGREES_SCALE;
         _longitude = _gps.getLongitude() * GPS_DEGREES_SCALE;
 
-        if (_gps.getFixType(0) >= 3)
+        _has_3d_fix = _gps.getFixType(0) >= 3;
+
+        if (_has_3d_fix)
         {
             const auto [east_meters, north_meters] = latitudeLongitudeToLocalMeters(_latitude, _longitude);
             const float east_velocity_meters_per_second = _gps.getNedEastVel(0) * GPS_VELOCITY_SCALE;

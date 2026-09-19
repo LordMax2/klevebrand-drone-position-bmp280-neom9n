@@ -41,6 +41,7 @@ class DroneBmp280Neom9nPosition
     bool _gps_ready = false;
     bool _bmp280_ready = false;
     bool _ready = false;
+    bool _has_3d_fix = false;
 
     KalmanEngine3x3 _kalman_altitude{0.01f, 0.01f, 0.0001f};
     KalmanEngine3x3 _kalman_east{0.01f, 0.01f, 0.0001f};
@@ -90,6 +91,8 @@ public:
     float getRawLatitude() const { return _latitude; }
 
     bool isReady() const { return _ready; }
+
+    bool hasGpsFix() const { return _has_3d_fix; }
 
     void run(bool has_gyro_update);
 };
