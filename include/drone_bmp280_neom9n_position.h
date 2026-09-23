@@ -15,7 +15,8 @@ static constexpr float METERS_PER_DEGREE_LATITUDE = 111320.0f;
 static constexpr float GPS_POSITION_VARIANCE = 4.0f;
 static constexpr float GPS_VELOCITY_VARIANCE = 0.01f;
 static constexpr float GPS_VELOCITY_SCALE = 1e-3f;
-static constexpr float BMP_ALTITUDE_VARIANCE = 0.14f;
+static constexpr float GPS_MILLIMETERS_TO_METERS = 1e-3f;
+static constexpr float GPS_ALTITUDE_VARIANCE_FLOOR = 4.0f;
 
 template <DroneGyroConcept SomeDroneGyroType>
 class DroneBmp280Neom9nPosition
@@ -31,6 +32,7 @@ class DroneBmp280Neom9nPosition
     float _longitude = 0.0f;
     float _origin_latitude = 0.0f;
     float _origin_longitude = 0.0f;
+    float _origin_altitude_meters = 0.0f;
     float _origin_pressure_pa = SEA_LEVEL_PRESSURE_PA;
 
     unsigned long _last_run_timestamp_microseconds = 0;

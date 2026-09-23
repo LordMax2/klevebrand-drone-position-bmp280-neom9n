@@ -104,6 +104,7 @@ bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupNeoM9n()
         {
             _origin_latitude = _latitude;
             _origin_longitude = _longitude;
+            _origin_altitude_meters = _gps.getAltitudeMSL(0) * GPS_MILLIMETERS_TO_METERS;
             _has_3d_fix = true;
 
             Serial.println(F("GPS LOCK ACQUIRED"));
@@ -122,7 +123,7 @@ bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupBmp280()
     {
         Serial.println(F("FAILED TO SETUP BMP280."));
 
-        //return false;
+        return false;
     }
 
     _bmp_device.setSampling(
@@ -135,7 +136,7 @@ bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupBmp280()
 
     const float origin_pressure_pa = _bmp_device.readPressure();
 
-    if (origin_pressure_pa <= 0.0f)
+    if (!(origin_pressure_pa > 0.0f))
     {
         Serial.println(F("FAILED TO READ BMP280 ORIGIN PRESSURE."));
 
@@ -153,7 +154,12 @@ bool DroneBmp280Neom9nPosition<SomeDroneGyroType>::setupBmp280()
 template <DroneGyroConcept SomeDroneGyroType>
 void DroneBmp280Neom9nPosition<SomeDroneGyroType>::setup()
 {
-    if (!setupBmp280() || !setupNeoM9n())
+    if (!setupBmp280())
+    {
+        Serial.println(F("BMP280 UNAVAILABLE. CONTINUING WITH GPS."));
+    }
+
+    if (!setupNeoM9n())
     {
         return;
     }
@@ -230,9 +236,16 @@ void DroneBmp280Neom9nPosition<SomeDroneGyroType>::run(const bool has_gyro_updat
             const float east_velocity_meters_per_second = _gps.getNedEastVel(0) * GPS_VELOCITY_SCALE;
             const float north_velocity_meters_per_second = _gps.getNedNorthVel(0) * GPS_VELOCITY_SCALE;
             const float up_velocity_meters_per_second = -_gps.getNedDownVel(0) * GPS_VELOCITY_SCALE;
+            const float altitude_above_origin_meters = _gps.getAltitudeMSL(0) * GPS_MILLIMETERS_TO_METERS - _origin_altitude_meters;
+            const float vertical_accuracy_meters = _gps.getVerticalAccEst(0) * GPS_MILLIMETERS_TO_METERS;
+            const float vertical_accuracy_variance = vertical_accuracy_meters * vertical_accuracy_meters;
+            const float altitude_variance = vertical_accuracy_variance > GPS_ALTITUDE_VARIANCE_FLOOR
+                ? vertical_accuracy_variance
+                : GPS_ALTITUDE_VARIANCE_FLOOR;
 
             _kalman_east.updateZeroState(east_meters, GPS_POSITION_VARIANCE);
             _kalman_north.updateZeroState(north_meters, GPS_POSITION_VARIANCE);
+            _kalman_altitude.updateZeroState(altitude_above_origin_meters, altitude_variance);
 
             _kalman_east.updateVelocityState(east_velocity_meters_per_second, GPS_VELOCITY_VARIANCE);
             _kalman_north.updateVelocityState(north_velocity_meters_per_second, GPS_VELOCITY_VARIANCE);
@@ -266,15 +279,20 @@ void DroneBmp280Neom9nPosition<SomeDroneGyroType>::run(const bool has_gyro_updat
 
     _last_run_timestamp_microseconds = now;
 
-    _pressure = _bmp_device.readPressure();
-    _temperature = _bmp_device.readTemperature();
-
-    if (_pressure <= 0.0f)
+    if (!_bmp280_ready)
     {
         return;
     }
 
-    _bmp280_last_altitude = pressureToAltitudeMeters(_pressure, _origin_pressure_pa);
+    const float pressure_pa = _bmp_device.readPressure();
+    const float temperature_celsius = _bmp_device.readTemperature();
 
-    _kalman_altitude.updateZeroState(_bmp280_last_altitude, BMP_ALTITUDE_VARIANCE);
+    if (!(pressure_pa > 0.0f))
+    {
+        return;
+    }
+
+    _pressure = pressure_pa;
+    _temperature = temperature_celsius;
+    _bmp280_last_altitude = pressureToAltitudeMeters(_pressure, _origin_pressure_pa);
 }
